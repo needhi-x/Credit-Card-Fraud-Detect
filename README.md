@@ -39,6 +39,8 @@ This project uses:
 ---
 
 ## 🏗️ Project Architecture
+
+```
 ┌──────────────────────┐
         │   Transaction Data   │
         │ (Amount, Time, V1–V28)
@@ -80,6 +82,7 @@ This project uses:
         │ Charts + History     │
         └──────────────────────┘
 
+```
 ---
 
 ## 🛠️ Tech Stack
@@ -190,9 +193,7 @@ streamlit run app.py
 ---
 ## 👩‍💻 Author
 
-**Nidhi**
-
-- GitHub: https://github.com/<needhi-x>  
+**Nidhi** 
   
 
 ---
