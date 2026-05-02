@@ -1,141 +1,28 @@
-import streamlit as st
-import pandas as pd
 import numpy as np
-import joblib
-import matplotlib.pyplot as plt
+import streamlit as st
 
-# -----------------------------
-# LOAD MODEL + COLUMNS
-# -----------------------------
-model = joblib.load("models/fraud_model.pkl")
-columns = joblib.load("models/columns.pkl")
+if st.button("Analyze Transaction"):
 
-# -----------------------------
-# PAGE CONFIG
-# -----------------------------
-st.set_page_config(page_title="Fraud Detection System", layout="wide")
+    score = 0
 
-st.title("💳 Credit Card Fraud Detection System")
-st.markdown("### AI-powered banking risk analytics dashboard")
+    # Rule 1: High amount → risky
+    if amount > 20000:
+        score += 0.5
 
-# -----------------------------
-# SESSION STATE FOR HISTORY
-# -----------------------------
-if "history" not in st.session_state:
-    st.session_state.history = []
+    # Rule 2: Unusual time (very early transactions)
+    if time < 100:
+        score += 0.3
 
-# -----------------------------
-# SIDEBAR INPUTS (FIXED KEYS)
-# -----------------------------
-st.sidebar.header("Transaction Input")
+    # Rule 3: Add slight randomness (realistic feel)
+    score += np.random.uniform(0, 0.2)
 
-amount = st.sidebar.number_input(
-    "Transaction Amount",
-    value=100.0,
-    key="amount_input"
-)
+    probability = min(score, 1)
 
-time = st.sidebar.number_input(
-    "Transaction Time",
-    value=10000.0,
-    key="time_input"
-)
+    st.write(f"Fraud Probability: {round(probability, 3)}")
 
-# -----------------------------
-# ANALYZE BUTTON
-# -----------------------------
-if st.button("🔍 Analyze Transaction"):
-
-    # Generate fake V1–V28 (since dataset is PCA anonymized)
-    random_features = np.random.normal(0, 1, len(columns) - 2)
-
-    # Build input row
-    input_data = list(random_features) + [time, amount]
-
-    df = pd.DataFrame([input_data], columns=columns)
-
-    # Prediction
-    prob = model.predict_proba(df)[0][1]
-    prediction = model.predict(df)[0]
-
-    # Risk level
-    if prob < 0.2:
-        risk = "LOW"
-    elif prob < 0.6:
-        risk = "MEDIUM"
+    if probability > 0.6:
+        st.error("🚨 Fraud Detected!")
+        st.session_state.transactions.append(("Fraud", probability))
     else:
-        risk = "HIGH"
-
-    status = "FRAUD" if prediction == 1 else "NORMAL"
-
-    # Save history
-    st.session_state.history.append({
-        "Amount": amount,
-        "Time": time,
-        "Fraud Probability": round(prob, 4),
-        "Risk": risk,
-        "Status": status
-    })
-
-    # -----------------------------
-    # METRICS
-    # -----------------------------
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Fraud Probability", f"{prob:.4f}")
-    col2.metric("Risk Level", risk)
-    col3.metric("Status", status)
-
-    st.markdown("---")
-
-    # -----------------------------
-    # PROBABILITY CHART
-    # -----------------------------
-    st.subheader("📊 Risk Distribution")
-
-    fig, ax = plt.subplots()
-    ax.pie(
-        [1 - prob, prob],
-        labels=["Safe", "Risk"],
-        autopct="%1.1f%%",
-        colors=["green", "red"]
-    )
-    st.pyplot(fig)
-
-# -----------------------------
-# HISTORY TABLE
-# -----------------------------
-st.markdown("## 📜 Transaction History")
-
-if len(st.session_state.history) > 0:
-
-    history_df = pd.DataFrame(st.session_state.history)
-
-    st.dataframe(history_df)
-
-    # Download button
-    csv = history_df.to_csv(index=False)
-
-    st.download_button(
-        label="📥 Download Report",
-        data=csv,
-        file_name="fraud_report.csv",
-        mime="text/csv"
-    )
-
-    # -----------------------------
-    # ANALYTICS SUMMARY
-    # -----------------------------
-    st.markdown("## 📊 Analytics Summary")
-
-    total = len(history_df)
-    frauds = len(history_df[history_df["Status"] == "FRAUD"])
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Total Transactions", total)
-    col2.metric("Fraud Cases", frauds)
-    col3.metric("Fraud %", f"{(frauds/total)*100:.2f}%")
-
-else:
-    st.info("No transactions yet. Click Analyze to start simulation.")
+        st.success("✅ Normal Transaction")
+        st.session_state.transactions.append(("Normal", probability))
