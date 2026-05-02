@@ -193,7 +193,7 @@ streamlit run app.py
 ---
 ## 👩‍💻 Author
 
-**Nidhi** 
+**Nidhi Apotikar** 
   
 
 ---
