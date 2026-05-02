@@ -101,3 +101,17 @@ else:
 if st.button("Reset Data"):
     st.session_state.transactions = []
     st.success("Data reset successfully!")
+
+    # -------------------------------
+# TRANSACTION HISTORY TABLE
+# -------------------------------
+st.subheader("📋 Transaction History")
+
+if len(st.session_state.transactions) > 0:
+    history_df = pd.DataFrame(
+        st.session_state.transactions,
+        columns=["Type", "Fraud Probability"]
+    )
+    st.dataframe(history_df)
+else:
+    st.info("No transaction history available.")
